@@ -47,6 +47,9 @@ public class CouchDbStore implements JobStore {
     private CouchDbJobStore jobStore;
     private CouchDbTriggerStore triggerStore;
     private CouchDbCalendarStore calendarStore;
+
+    private DatabaseNameProvider dbNameGenerator;
+
     private boolean schedulerRunning;
     private long misfireThreshold = 60000L;
 
@@ -79,7 +82,11 @@ public class CouchDbStore implements JobStore {
         try {
             httpClientFactoryBean.afterPropertiesSet();
 
-            CouchDbConnector connector = new StdCouchDbConnector("scheduler", new StdCouchDbInstance(httpClientFactoryBean.getObject()));
+            String databaseName = "scheduler";
+            if (dbNameGenerator != null) {
+                databaseName = dbNameGenerator.getDatabaseName();
+            }
+            CouchDbConnector connector = new StdCouchDbConnector(databaseName, new StdCouchDbInstance(httpClientFactoryBean.getObject()));
             this.jobStore = new CouchDbJobStore(connector);
             this.triggerStore = new CouchDbTriggerStore(connector);
             this.calendarStore = new CouchDbCalendarStore(connector);
@@ -580,6 +587,15 @@ public class CouchDbStore implements JobStore {
             couchdbTrigger = new CouchDbCalendarIntervalTrigger((CalendarIntervalTriggerImpl) newTrigger);
         }
         return couchdbTrigger;
+    }
+
+    public String getDbNameGenerator() {
+        return dbNameGenerator.getClass().getName();
+    }
+
+    public void setDbNameGenerator(String dbNameGenerator) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+        final Class<?> aClass = Class.forName(dbNameGenerator);
+        this.dbNameGenerator = (DatabaseNameProvider) aClass.newInstance();
     }
 
     public static class NotImplementedException extends RuntimeException {
