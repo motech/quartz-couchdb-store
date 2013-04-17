@@ -9,7 +9,7 @@ useful for you.
 
 Why?
 
-    * No/Less overhead of locking across tables.
-    * First version of couchdb jobstore is 5x faster, so it can run more jobs on single node.
-    * No schema maintenance - useful while running multiple instances of quartz (cloud solutions)
-    * No limit on Scalability - can scale with couch
+ * No/Less overhead of locking across tables.
+ * First version of couchdb jobstore is 5x faster, so it can run more jobs on single node.
+ * No schema maintenance - useful while running multiple instances of quartz (cloud solutions)
+ * No limit on Scalability - can scale with couch
