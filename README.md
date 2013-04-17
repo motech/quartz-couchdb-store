@@ -4,7 +4,7 @@ quartz-couchdb-store
 Quartz CouchDb store
 
 An alternative job store implementation for [quartz scheduler](http://quartz-scheduler.org/). Quartz scheduler
-supports JDBC store and Ram job store by default. If you are looking for no-sql quartz backend this might be
+supports JDBC store and Ram job store by default. If you are looking for [CouchDB](http://couchdb.apache.org/) quartz backend this might be
 useful for you.
 
 Why?
