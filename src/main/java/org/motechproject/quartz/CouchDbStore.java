@@ -26,6 +26,7 @@ import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.SchedulerSignaler;
 import org.quartz.spi.TriggerFiredBundle;
 import org.quartz.spi.TriggerFiredResult;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -594,8 +595,12 @@ public class CouchDbStore implements JobStore {
     }
 
     public void setDbNameGenerator(String dbNameGenerator) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        final Class<?> aClass = Class.forName(dbNameGenerator);
-        this.dbNameGenerator = (DatabaseNameProvider) aClass.newInstance();
+        if (dbNameGenerator == null || dbNameGenerator.equals("")) {
+            this.dbNameGenerator = new DefaultDatabaseNameProvider();
+        } else {
+            final Class<?> aClass = Class.forName(dbNameGenerator);
+            this.dbNameGenerator = (DatabaseNameProvider) aClass.newInstance();
+        }
     }
 
     public static class NotImplementedException extends RuntimeException {
