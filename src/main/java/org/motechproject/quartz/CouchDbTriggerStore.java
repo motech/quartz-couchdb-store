@@ -35,10 +35,15 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
 
     // TODO: check conflict?
     public void updateTriggers(List<CouchDbTrigger> newTriggers) {
+        if (logger.isDebugEnabled()) {
+            for (CouchDbTrigger trigger : newTriggers) {
+                logger.debug(String.format("Document ID : %s; Revision: %s", trigger.getId(), trigger.getRevision()));
+            }
+        }
         db.executeBulk(newTriggers);
     }
 
-    public void storeTrigger(CouchDbTrigger newTrigger, boolean replaceExisting) throws ObjectAlreadyExistsException, JobPersistenceException {
+    public void storeTrigger(CouchDbTrigger newTrigger, boolean replaceExisting) throws JobPersistenceException {
         CouchDbTrigger existingTrigger = getTriggerByKey(newTrigger.getKey());
         if (existingTrigger == null) {
             db.create(newTrigger);
@@ -51,6 +56,9 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
             newTrigger.setName(existingTrigger.getName());
             newTrigger.setGroup(existingTrigger.getGroup());
             newTrigger.setRevision(existingTrigger.getRevision());
+            if (logger.isDebugEnabled()) {
+                logger.debug(String.format("Document ID : %s; Revision: %s", newTrigger.getId(), newTrigger.getRevision()));
+            }
             db.update(newTrigger);
         } else {
             throw new ObjectAlreadyExistsException("trigger already exists " + newTrigger.getKey());
@@ -60,6 +68,11 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
     public boolean removeTrigger(TriggerKey triggerKey) throws JobPersistenceException {
         logger.info("removeTrigger: " + triggerKey + "[" + Thread.currentThread().getId() + "]");
         CouchDbTrigger trigger = getTriggerByKey(triggerKey);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Document ID : %s; Revision: %s", trigger.getId(), trigger.getRevision()));
+        }
+
         if (trigger == null) {
             return false;
         }
@@ -69,6 +82,11 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
 
     public boolean replaceTrigger(TriggerKey triggerKey, CouchDbTrigger newTrigger) throws JobPersistenceException {
         CouchDbTrigger existingTrigger = getTriggerByKey(triggerKey);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Document ID : %s; Revision: %s", existingTrigger.getId(), existingTrigger.getRevision()));
+        }
+
         if (existingTrigger == null) {
             return false;
         }
