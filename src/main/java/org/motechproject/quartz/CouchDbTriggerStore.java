@@ -69,12 +69,13 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
         logger.info("removeTrigger: " + triggerKey + "[" + Thread.currentThread().getId() + "]");
         CouchDbTrigger trigger = getTriggerByKey(triggerKey);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Document ID : %s; Revision: %s", trigger.getId(), trigger.getRevision()));
-        }
 
         if (trigger == null) {
             return false;
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Document ID : %s; Revision: %s", trigger.getId(), trigger.getRevision()));
         }
         db.delete(trigger);
         return true;
@@ -83,13 +84,14 @@ public class CouchDbTriggerStore extends CouchDbRepositorySupport<CouchDbTrigger
     public boolean replaceTrigger(TriggerKey triggerKey, CouchDbTrigger newTrigger) throws JobPersistenceException {
         CouchDbTrigger existingTrigger = getTriggerByKey(triggerKey);
 
+        if (existingTrigger == null) {
+            return false;
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Document ID : %s; Revision: %s", existingTrigger.getId(), existingTrigger.getRevision()));
         }
 
-        if (existingTrigger == null) {
-            return false;
-        }
         if (!(existingTrigger.getJobName().equals(newTrigger.getJobKey().getName()) && existingTrigger.getJobGroup().equals(newTrigger.getJobKey().getGroup()))) {
             throw new JobPersistenceException("New trigger is not related to the same job as the old trigger.");
         }
