@@ -26,7 +26,6 @@ import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.SchedulerSignaler;
 import org.quartz.spi.TriggerFiredBundle;
 import org.quartz.spi.TriggerFiredResult;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,8 +47,6 @@ public class CouchDbStore implements JobStore {
     private CouchDbJobStore jobStore;
     private CouchDbTriggerStore triggerStore;
     private CouchDbCalendarStore calendarStore;
-
-    private DatabaseNameProvider dbNameGenerator;
 
     private boolean schedulerRunning;
     private long misfireThreshold = 60000L;
@@ -78,14 +75,25 @@ public class CouchDbStore implements JobStore {
         properties.load(ClassLoader.class.getResourceAsStream(propertiesFile));
 
         HttpClientFactoryBean httpClientFactoryBean = new HttpClientFactoryBean();
-        httpClientFactoryBean.setProperties(properties);
+        httpClientFactoryBean.setProperties(extractHttpClientProperties(properties));
         httpClientFactoryBean.setCaching(false);
         try {
             httpClientFactoryBean.afterPropertiesSet();
 
-            String databaseName = "scheduler";
-            if (dbNameGenerator != null) {
-                databaseName = dbNameGenerator.getDatabaseName();
+            String dbNameGeneratorClass = properties.getProperty("db.nameGenerator");
+            String dbName = properties.getProperty("db.name");
+
+            DatabaseNameProvider dbNameGenerator;
+            if (dbNameGeneratorClass == null || dbNameGeneratorClass.equals("")) {
+                dbNameGenerator = new DefaultDatabaseNameProvider(dbName);
+            } else {
+                Class<?> aClass = Class.forName(dbNameGeneratorClass);
+                dbNameGenerator = (DatabaseNameProvider) aClass.newInstance();
+            }
+
+            String databaseName = dbNameGenerator.getDatabaseName();
+            if (databaseName == null || databaseName.equals("")) {
+                databaseName = "scheduler";
             }
             CouchDbConnector connector = new StdCouchDbConnector(databaseName, new StdCouchDbInstance(httpClientFactoryBean.getObject()));
             this.jobStore = new CouchDbJobStore(connector);
@@ -95,6 +103,17 @@ public class CouchDbStore implements JobStore {
             logger.error(e.getMessage(), e);
             throw new CouchDbJobStoreException(e);
         }
+    }
+
+    private Properties extractHttpClientProperties(Properties properties) {
+        Properties httpClientProperties = new Properties();
+        for (Object k : properties.keySet()) {
+            String key = (String) k;
+            if (!key.startsWith("db.")) {
+                httpClientProperties.put(key, properties.get(key));
+            }
+        }
+        return httpClientProperties;
     }
 
 
@@ -588,19 +607,6 @@ public class CouchDbStore implements JobStore {
             couchdbTrigger = new CouchDbCalendarIntervalTrigger((CalendarIntervalTriggerImpl) newTrigger);
         }
         return couchdbTrigger;
-    }
-
-    public String getDbNameGenerator() {
-        return dbNameGenerator.getClass().getName();
-    }
-
-    public void setDbNameGenerator(String dbNameGenerator) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        if (dbNameGenerator == null || dbNameGenerator.equals("")) {
-            this.dbNameGenerator = new DefaultDatabaseNameProvider();
-        } else {
-            final Class<?> aClass = Class.forName(dbNameGenerator);
-            this.dbNameGenerator = (DatabaseNameProvider) aClass.newInstance();
-        }
     }
 
     public static class NotImplementedException extends RuntimeException {

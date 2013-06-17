@@ -32,13 +32,6 @@ public class CouchDbStoreCalendarRepeatingJobIT {
     public void setUp() throws Exception {
         StdSchedulerFactory stdSchedulerFactory = new StdSchedulerFactory("quartz.properties");
         scheduler = stdSchedulerFactory.getScheduler();
-
-//        final QuartzSchedulerResources resources = new QuartzSchedulerResources();
-//        final CouchDbStore jobStore = new CouchDbStore();
-//        final URL resource = this.getClass().getResource("couchdb.properties");
-//        jobStore.setProperties(new Properties(new File(resource.getFile())));
-//        resources.setJobStore(jobStore);
-//        scheduler = new StdScheduler(new QuartzScheduler(resources, 1000, 1000));
     }
 
     @Test
